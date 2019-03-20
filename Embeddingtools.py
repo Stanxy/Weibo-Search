@@ -94,7 +94,7 @@ def phrase_embedding(S, w2v, top_k_importance = 5 ,filter = False, star_pool = N
     event_pool -- event that used to tract events from the tags, dtype: list( Preparing )
     
     Returns:
-    embedding_vec -- phrase embedding vector, of shape(ndim, )
+    embedding_vec -- phrase embedding vector, of shape(ndim, 1)
     """
     
     word_tags = jieba.analyse.extract_tags(S, top_k_importance)           # substract the critical tags that we need
