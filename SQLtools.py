@@ -39,7 +39,7 @@ class SQL_in:
         self.cur.close()
 
 
-    def initialize_db(self,user_table_command):
+    def initialize_db(self):
         '''
         function used to initialize the database 
         '''
@@ -63,7 +63,7 @@ class SQL_in:
             time TIME NOT NULL,
             uid INTEGER,
             most_hot TEXT NOT NULL,
-            special_push TEXT NOT NULL
+            special_push TEXT NOT NULL,
             recommend1 TEXT NOT NULL,
             recommend2 TEXT NOT NULL,
             recommend3 TEXT NOT NULL,
@@ -129,7 +129,7 @@ class SQL_in:
         );
 
         CREATE TABLE Userinterests(
-            uid INTEGER PRIMARY,
+            uid INTEGER PRIMARY kEY,
             interest1 REAL, interest2 REAL, interest3 REAL, interest4 REAL, interest5 REAL,
             interest6 REAL, interest7 REAL, interest8 REAL, interest9 REAL, interest10 REAL,
             interest11 REAL, interest12 REAL, interest13 REAL, interest14 REAL, interest15 REAL,
@@ -138,7 +138,6 @@ class SQL_in:
         );
 
         ''')
-
 
     def upload_Query_data(self,query_log):
         '''
@@ -203,11 +202,14 @@ class SQL_in:
                     continue
 
                 try:
-                    self.cur.execute('''INSERT OR IGNORE INTO Recommender (date, time, phrase, uid, behavior, util) 
+                    self.cur.execute('''INSERT OR IGNORE INTO Query (date, time, phrase, uid, behavior, util) 
                     VALUES ( ?, ?, ?, ?, ?, ?)''', ( d_t[0] , d_t[1], phrase, uid, behavior, util) )
                 except:
                     continue
-                
+                #############
+                #if cur_ == 10:
+                #    break
+                ############
                 cur_ +=1
                 if cur_ % 10000 == 0:
                     self.conn.commit()
@@ -218,9 +220,10 @@ class SQL_in:
         #cur.close()
         self.cur.execute('SELECT * FROM Query')
         top = self.cur.fetchone()
-        if len(top[0]):
+        try:
+            len(top[0])
             return True
-        else:
+        except:
             print("There is a problem!")
             return False
 
@@ -296,9 +299,12 @@ class SQL_in:
                     continue
                 
                 cur_ +=1
+                
                 if cur_ % 10000 == 0:
                     self.conn.commit()
             
+            file_order += 1
+
         self.conn.commit()
         #cur.close()
         self.cur.execute('SELECT * FROM Recommender')
@@ -342,7 +348,7 @@ class SQL_in:
                     #print(count)
                 else:
                     break
-
+            
             try:
                 date0 = re.findall('t(.*)-',log)[0]
                 date = date0[:4] + '-' + date0[4:6] + '-' + date0[6:] 
@@ -352,41 +358,30 @@ class SQL_in:
                 #print(d_t)
             except:    
                 continue
-            
-            temp = []
-            for line in h_list:
-                fields = line.strip().split("\t")
-                if len(fields)!= 11:
-                    continue
-                
-                try:
-                    phrase = fields[0]
-                    temp.append(phrase)
-                except:
-                    print(fields)
-                    continue
-                
-                info_tuple = tuple(d_t + temp)
-                try:
-                    self.cur.execute('''INSERT OR IGNORE INTO Hotphrase (date, time, 
-                    hotphrase1, hotphrase2, hotphrase3, hotphrase4, hotphrase5, hotphrase6,
-                    hotphrase7, hotphrase8, hotphrase9, hotphrase10, hotphrase11, hotphrase12,
-                    hotphrase13, hotphrase14, hotphrase15, hotphrase16, hotphrase17, hotphrase18,
-                    hotphrase19, hotphrase20, hotphrase21, hotphrase22, hotphrase23, hotphrase24,
-                    hotphrase25, hotphrase26, hotphrase27, hotphrase28, hotphrase29, hotphrase30,
-                    hotphrase31, hotphrase32, hotphrase33, hotphrase34, hotphrase35, hotphrase36,
-                    hotphrase37, hotphrase38, hotphrase39, hotphrase40, hotphrase41, hotphrase42,
-                    hotphrase43, hotphrase44, hotphrase45, hotphrase46, hotphrase47, hotphrase48,
-                    hotphrase49, hotphrase50)
-                                      VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
-                                      ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
-                                      ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
-                                      ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
-                                      ?, ?, ?, ?, ?, ?, ?, ?, ? ,? )''', \
-                                          info_tuple)
-                except:
-                    continue
-                
+
+            info_tuple = tuple(d_t + h_list)
+
+            #print(info_tuple)
+            try:
+                self.cur.execute('''INSERT OR IGNORE INTO Hotphrase (date, time, 
+                hotphrase1, hotphrase2, hotphrase3, hotphrase4, hotphrase5, hotphrase6,
+                hotphrase7, hotphrase8, hotphrase9, hotphrase10, hotphrase11, hotphrase12,
+                hotphrase13, hotphrase14, hotphrase15, hotphrase16, hotphrase17, hotphrase18,
+                hotphrase19, hotphrase20, hotphrase21, hotphrase22, hotphrase23, hotphrase24,
+                hotphrase25, hotphrase26, hotphrase27, hotphrase28, hotphrase29, hotphrase30,
+                hotphrase31, hotphrase32, hotphrase33, hotphrase34, hotphrase35, hotphrase36,
+                hotphrase37, hotphrase38, hotphrase39, hotphrase40, hotphrase41, hotphrase42,
+                hotphrase43, hotphrase44, hotphrase45, hotphrase46, hotphrase47, hotphrase48,
+                hotphrase49, hotphrase50)
+                                  VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
+                                  ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
+                                   ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
+                                  ?, ?, ?, ?, ?, ?, ?, ?, ? ,?,
+                                  ?, ?, ?, ?, ?, ?, ?, ?, ? ,? )''', \
+                                      info_tuple)
+            except:
+                continue
+            file_order += 1     
         self.conn.commit()
         #cur.close()
         self.cur.execute('SELECT * FROM Recommender')
@@ -398,7 +393,7 @@ class SQL_in:
             return False
 
 
-def upload_Userinterests_data(self,Userinterests_log):
+    def upload_Userinterests_data(self,Userinterests_log):
         '''
         upload all the Userinterests data into the Userinterests table
 
@@ -423,24 +418,27 @@ def upload_Userinterests_data(self,Userinterests_log):
             for line in tqdm(lines):
                 
                 fields = line.strip().split("\t")
+                #print(fields)
                 if len(fields)!= 2:
                     continue
                 
-                try:
-                    uid = list(int(fields[0]))
-                    interests_list = fields[1].split('|')
-                    for i in range(len(interests_list)):
-                        interests_list[i] = float(interests_list[i])
+                #try:
+                uid = []
+                uid.append(int(fields[0]))
+                interests_list = fields[1].split('|')
+                for i in range(len(interests_list)):
+                    interests_list[i] = float(interests_list[i])
 
-                    temp_tuple = tuple(uid + interests_list)
-                    if uid == 0:
-                        continue
-                except:
-                    print(fields)
-                    continue
-
+                temp_tuple = tuple(uid + interests_list)
+                #print(temp_tuple)
+                #if uid[0] == 0:
+                #    continue
+                #except:
+                #    print(fields)
+                #    continue
+                    
                 try:
-                    self.cur.execute('''INSERT OR IGNORE INTO Userinterest (
+                    self.cur.execute('''INSERT OR IGNORE INTO Userinterests (
                     uid, interest1 , interest2 , interest3 , interest4 , interest5 ,
                     interest6 , interest7 , interest8 , interest9 , interest10 ,
                     interest11 , interest12 , interest13 , interest14 , interest15 ,
@@ -461,7 +459,8 @@ def upload_Userinterests_data(self,Userinterests_log):
         #cur.close()
         self.cur.execute('SELECT * FROM Userinterests')
         top = self.cur.fetchone()
-        if len(top[0]):
+        #print(top)
+        if len(top):
             return True
         else:
             print("There is a problem!")
@@ -520,14 +519,14 @@ class SQL_out:
         try:
             #Here we first initialize a dictionary to count how much hisory each user have.
             query_dict =  {}
-            for query in temp_query_list:
+            for query in tqdm(temp_query_list):
 
-                if query[2] in query_dict:
-                    query_dict[query[2]] += 1
+                if query[3] in query_dict:
+                    query_dict[query[3]] += 1
                 else:
-                    query_dict[query[2]] = 1
+                    query_dict[query[3]] = 1
                 
-                if query_dict[query[2]] == up_bnd+1:
+                if query_dict[query[3]] == up_bnd+1:
                     continue
                 
                 query_tuples.append(query)
@@ -542,21 +541,22 @@ class SQL_out:
         try:
             #Here we first initialize a dictionary to count how much hisory each user have.
             query_dict =  {}
-            for query in temp_query_list:
-
-                if query[2] in query_dict:
-                    query_dict[query[2]] += 1
+            for query in tqdm(temp_query_list):
+                #print(query)
+                if query[3] in query_dict:
+                    query_dict[query[3]] += 1
                 else:
-                    query_dict[query[2]] = 1
+                    query_dict[query[3]] = 1
                 
-                if query_dict[query[2]] == spl_per_user + 1:
+                if query_dict[query[3]] == spl_per_user + 1:
                     continue
                 
                 query_tuples.append(query)
             
             return_list = []
             for item in query_tuples:
-                if query_dict[item[2]] >= spl_per_user:
+                #print(item)
+                if query_dict[item[3]] >= spl_per_user:
                     return_list.append(item)
 
             return return_list
@@ -590,14 +590,14 @@ class SQL_out:
         new_user_list -- the list of tuples [(date, time, phrase, uid, behavior)]
         '''
         if mode == 'window':
-            self.cur.execute('''SELECT uid, phrase, date, time FROM Query WHERE date >= ? AND date <= ? AND time >= ? 
+            self.cur.execute('''SELECT date, time, phrase, uid, behavior FROM Query WHERE date >= ? AND date <= ? AND time >= ?
                                 AND time <= ? ORDER BY date, time DESC''',  \
                 (time_start[0], time_end[0], time_start[1], time_end[1]))
             self.query_list = self.cur.fetchall()
             return self.query_list
         
         if mode == 'up_bnd':
-            self.cur.execute('''SELECT uid, phrase, date, time FROM Query WHERE date >= ? AND date <= ? AND time >= ? 
+            self.cur.execute('''SELECT date, time, phrase, uid, behavior FROM Query WHERE date >= ? AND date <= ? AND time >= ?
                                 AND time <= ? ORDER BY date, time DESC''',  \
                 (time_start[0], time_end[0], time_start[1], time_end[1]))
             temp_query_list = self.cur.fetchall()
@@ -605,7 +605,7 @@ class SQL_out:
             return ret
         
         if mode == 'constraint':
-            self.cur.execute('''SELECT uid, phrase, date, time FROM Query WHERE date >= ? AND date <= ? AND time >= ? 
+            self.cur.execute('''SELECT date, time, phrase, uid, behavior FROM Query WHERE date >= ? AND date <= ? AND time >= ?
                                 AND time <= ? ORDER BY date, time DESC''',  \
                 (time_start[0], time_end[0], time_start[1], time_end[1]))
             temp_query_list = self.cur.fetchall()
@@ -636,33 +636,60 @@ class SQL_out:
         if negative_samples >= 6:
             print('Too much samples required, the number of negative_samples should below 5')
             return None
-
+        case_num = 0
         if contrast_mode == 'normal':
             new_user_list = []
-            for case in user_tuples:
+            case_not_found = []
+            for case in tqdm(user_tuples):
                 # Here negative sample is used to control the number of negative_samples.
-                self.cur.execute('''SELECT recommend1, recommend2, recommend3, recommend4, recommend5, recommend6
-                                FROM Recommender WHERE uid = ? AND date = ? AND time = ?''', \
-                                    (case[2], case[0], case[1]))
+                self.cur.execute(''' SELECT recommend1, recommend2, recommend3, recommend4, recommend5, recommend6
+                                FROM Recommender WHERE uid = ? AND date <= ? AND time < ? ORDER BY date, time DESC''', (case[3],case[0],case[1]))
                 recommended_phrases = []
                 count = 0
-                for phrase in self.cur.fetchone()[0]:
-                    if phrase != case[2] and count <= negative_samples:
-                        count += 1
-                        recommended_phrases.append(phrase)
-
-                new_case = tuple(list(case[3]) + list(case[:3]) + list(recommended_phrases)) 
-                new_user_list.append(new_case)
-            return new_user_list
+                #print(case[3])
+                try:
+                    recommends = list(self.cur.fetchall())
+                    for phrase in recommends[0]:
+                        #print(phrase)
+                        if phrase != case[2] and count <= negative_samples:
+                            count += 1
+                            recommended_phrases.append(phrase)
+                            id = []
+                            id.append(case[3])
+                    new_case = tuple(id + list(case[:3]) + list(recommended_phrases)) 
+                    new_user_list.append(new_case)
+                    case_num += 1
+                except:
+                    new_user_list.append(-1)
+                    case_not_found.append(case_num)
+                    case_num += 1
+                    continue
+                    
+            return new_user_list, case_not_found
         
         if contrast_mode  == 'special':
             new_user_list = []
-            for case in user_tuples:
-                self.cur.execute('''SELECT special_push FROM Recommender WHERE uid = ? AND date = ? AND time = ?''', \
-                                (case[2], case[0], case [1]))
-                new_case = tuple(list(case[3]) + list(case[:3]) + list(self.cur.fetchone()[0][0]))
-                new_user_list.append(new_case)
-            return new_user_list
+            case_not_found = []
+            for case in tqdm(user_tuples):
+                self.cur.execute('''SELECT special_push FROM Recommender WHERE uid = ? AND date <=? AND time < ? ORDER BY date, time DESC''', \
+                                (case[3],case[0],case[1]))
+                id = []
+                id.append(case[3])
+                try:
+                    special_push = list(self.cur.fetchall())[0][0]
+                    #print(case[3],case[0],case[1])
+                    len(special_push)
+                    #print(self.cur.fetchall()[0])
+                    new_case = tuple(id + list(case[:3]) + [special_push])
+                    new_user_list.append(new_case)
+                    case_num += 1
+                except:
+                    new_user_list.append(-1)
+                    case_not_found.append(case_num)
+                    case_num += 1
+                    continue
+                
+            return new_user_list, case_not_found
     
     def fetch_sample_hotphrase(self, user_tuples):
         '''
@@ -675,7 +702,19 @@ class SQL_out:
         user_hotphrase_tuple_list -- the list of tuples [(uid, date, time, phrase, hotphrase1, horphrase2, ..., hotphrase50)]
         '''
         user_hotphrase_tuple_list = []
-        for case in user_tuples:
+        case_not_found = []
+        case_num = 0
+        for case in tqdm(user_tuples):
+            date_upper_bound = case[0].split('-')
+            time_upper_bound = case[1].split(':')
+            d_t_obj = datetime.datetime(int(date_upper_bound[0]),int(date_upper_bound[1]),int(date_upper_bound[2]), \
+                                int(time_upper_bound[0]), int(time_upper_bound[1]), int(time_upper_bound[2]))
+            delta_plus = datetime.timedelta(minutes = 1)
+            delta_minus = datetime.timedelta(minutes = -1)
+            d_t_obj_upper = d_t_obj + delta_plus
+            d_t_obj_lower = d_t_obj + delta_minus
+            window_upper_bound = d_t_obj_upper.strftime('%Y-%m-%d %H:%M:%S')[11:]
+            window_lower_bound = d_t_obj_lower.strftime('%Y-%m-%d %H:%M:%S')[11:]
             self.cur.execute('''SELECT 
                     hotphrase1, hotphrase2, hotphrase3, hotphrase4, hotphrase5, hotphrase6,
                     hotphrase7, hotphrase8, hotphrase9, hotphrase10, hotphrase11, hotphrase12,
@@ -685,9 +724,18 @@ class SQL_out:
                     hotphrase31, hotphrase32, hotphrase33, hotphrase34, hotphrase35, hotphrase36,
                     hotphrase37, hotphrase38, hotphrase39, hotphrase40, hotphrase41, hotphrase42,
                     hotphrase43, hotphrase44, hotphrase45, hotphrase46, hotphrase47, hotphrase48,
-                    hotphrase49, hotphrase50 FROM Horphrase WHERE time = ? AND date = ?''', (case[0], case[1]))
-            user_hotphrase_tuple_list.append(tuple(list(case[3]) + list(case[:3]) + list(self.cur.fetchone()[0])))
-        return user_hotphrase_tuple_list
+                    hotphrase49, hotphrase50 FROM Hotphrase WHERE time >= ? AND time <= ? AND date = ? ORDER BY date, time DESC''', (window_lower_bound, window_upper_bound, case[0]))
+            id = []
+            id.append(case[3])
+            try:
+                user_hotphrase_tuple_list.append(tuple(id + list(case[:3]) + list(self.cur.fetchone())))
+                case_num += 1
+            except:
+                user_hotphrase_tuple_list.append(-1)
+                case_not_found.append(case_num)
+                case_num += 1
+                continue
+        return user_hotphrase_tuple_list, case_not_found
 
     def fetch_query_history(self, user_tuples, mode = 'window', times = 10, window = 7):
         '''
@@ -709,17 +757,27 @@ class SQL_out:
         user_query_history -- a list of uid and query tuples [(uid, q1, q2, ..., qn)]
         '''
         user_query_history = []
-        for case in user_tuples:
-            uid = case[4]
+        case_not_found = []
+        case_num = 0
+        for case in tqdm(user_tuples):
+            uid = case[3]
             if mode == 'times':
-                self.cur.execute('''SELECT phrase FROM Query LIMIT ? WHERE uid = ? AND date < ? 
-                                AND time < ? ORDER BY date, time DESC''', \
-                                (times, uid, case[0], case[1]))
+                self.cur.execute('''SELECT phrase FROM Query WHERE uid = ? AND date <= ? 
+                                AND time < ? ORDER BY date, time LIMIT ? ORDER BY date, time DESC''', \
+                                (uid, case[0], case[1], times))
                 temp_list = []
-                for phrase in self.cur.fetchall():
+                phrases = list(self.cur.fetchall())
+                for phrase in phrases:
                     temp_list.append(phrase[0])
-                user_query_history.append(tuple(list(uid) + temp_list))
-                return user_query_history
+                    #print(phrase[0])
+                if len(temp_list) != 0:
+                    user_query_history.append(tuple([case[3]] + temp_list))
+                    case_num += 1
+                else:
+                    user_query_history.append(-1)
+                    case_not_found.append(case_num)
+                    case_num += 1
+                #return user_query_history, case_not_found
 
             if mode == 'window':
                 date_upper_bound = case[0].split('-')
@@ -729,14 +787,24 @@ class SQL_out:
                 delta = datetime.timedelta(days = -window)
                 d_t_obj_lower = d_t_obj_upper + delta
                 window_lower_bound = d_t_obj_lower.strftime('%Y-%m-%d %H:%M:%S')[:10]
-                self.cur.execute('''SELECT phrase FROM Query WHERE uid = ? AND date < ? 
+
+                #print(uid, case[0], case[1],window_lower_bound)
+                self.cur.execute('''SELECT phrase FROM Query WHERE uid = ? AND date <= ? 
                                 AND time < ? AND date >= ? ORDER BY date, time DESC''', \
-                                (uid, times, case[0], case[1], window_lower_bound))
+                                (uid, case[0], case[1], window_lower_bound))
                 temp_list = []
-                for phrase in self.cur.fetchall():
+                phrases = list(self.cur.fetchall())
+                for phrase in phrases:
                     temp_list.append(phrase[0])
-                user_query_history.append(tuple(list(uid) + temp_list))
-                return user_query_history
+                if len(temp_list) != 0:
+                    user_query_history.append(tuple([case[3]] + temp_list))
+                    case_num += 1
+                else:
+                    user_query_history.append(-1)
+                    case_not_found.append(case_num)
+                    case_num += 1
+                    continue
+        return user_query_history, case_not_found
 
     def fetch_user_interest(self, user_tuples):
         '''
@@ -750,14 +818,24 @@ class SQL_out:
         user_interest -- a list of uid and interest tuples [(uid, intest1, interest2, ..., interest 25)]
         '''
         user_interest = []
-        for case in user_tuples:
-            uid = case[4]
+        case_not_found = []
+        case_num = 0
+        for case in tqdm(user_tuples):
+            uid = case[3]
             self.cur.execute('''SELECT uid, interest1 , interest2 , interest3 , interest4 , interest5 ,
             interest6 , interest7 , interest8 , interest9 , interest10 ,
             interest11 , interest12 , interest13 , interest14 , interest15 ,
             interest16 , interest17 , interest18 , interest19 , interest20 ,
             interest21 , interest22 , interest23 , interest24 , interest25   
-            FROM Userinterests WHERE uid = ?''', (uid))
-            temp_tuple = self.cur.fetchone()[0]
-            user_interest.append(temp_tuple)
-        return user_interest
+            FROM Userinterests WHERE uid = ?''', (uid,))
+            try:
+                temp_tuple = self.cur.fetchone()
+                len(temp_tuple)
+                user_interest.append(temp_tuple)
+                case_num += 1
+            except:
+                user_interest.append(-1)
+                case_not_found.append(case_num)
+                case_num += 1
+                continue
+        return user_interest, case_not_found
